@@ -249,9 +249,7 @@
   </section>
 
   <!-- FILTROS DE CATEGORIA -->
-  <nav class="filtros-container" id="filtros-categoria">
-    <button class="btn-filtro ativo" onclick="filtrarCategoria('Todos', this)">✨ Todos</button>
-  </nav>
+  <nav class="filtros-container" id="filtros-categoria"></nav>
 
   <!-- LISTA DE PRESENTES -->
   <main id="lista-presentes">
@@ -323,35 +321,40 @@
 
     // 3. GERAR BOTÕES DE FILTRO DINAMICAMENTE
     function gerarBotoesCategorias(presentes) {
-      const categorias = ['Todos', ...new Set(presentes.map(p => p.categoria).filter(Boolean))];
+      // Extrai categorias unicas limpando espaços extras
+      const listaCategoriasBrutas = presentes
+        .map(p => (p.categoria || '').trim())
+        .filter(cat => cat.length > 0);
+      
+      const categoriasUnicas = ['Todos', ...new Set(listaCategoriasBrutas)];
       const containerFiltros = document.getElementById('filtros-categoria');
       
       containerFiltros.innerHTML = '';
 
-      categorias.forEach(cat => {
+      categoriasUnicas.forEach(cat => {
         const btn = document.createElement('button');
         btn.classList.add('btn-filtro');
         if (cat === 'Todos') btn.classList.add('ativo');
         btn.innerText = cat === 'Todos' ? '✨ Todos' : cat;
-        btn.onclick = () => filtrarCategoria(cat, btn);
+
+        // Event listener seguro sem concatenar texto no onclick HTML
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
+          btn.classList.add('ativo');
+
+          if (cat === 'Todos') {
+            renderizarPresentes(todosPresentes);
+          } else {
+            const filtrados = todosPresentes.filter(p => (p.categoria || '').trim() === cat);
+            renderizarPresentes(filtrados);
+          }
+        });
+
         containerFiltros.appendChild(btn);
       });
     }
 
-    // 4. FILTRAR POR CATEGORIA
-    function filtrarCategoria(categoria, botao) {
-      document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
-      botao.classList.add('ativo');
-
-      if (categoria === 'Todos') {
-        renderizarPresentes(todosPresentes);
-      } else {
-        const filtrados = todosPresentes.filter(p => p.categoria === categoria);
-        renderizarPresentes(filtrados);
-      }
-    }
-
-    // 5. RENDERIZAR OS CARDS NA TELA
+    // 4. RENDERIZAR OS CARDS NA TELA
     function renderizarPresentes(lista) {
       const container = document.getElementById('lista-presentes');
       container.innerHTML = '';
@@ -385,7 +388,7 @@
       });
     }
 
-    // 6. MODAL E RECADOS
+    // 5. MODAL E RECADOS
     function abrirModal(id, nome) {
       presenteSelecionado = { id, nome };
       document.getElementById('modal-titulo').innerText = `Presentear: ${nome}`;

@@ -16,10 +16,74 @@
     }
     header {
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     h1 { color: #2c3e50; font-size: 2rem; margin-bottom: 5px; }
     .subtitulo { color: #7f8c8d; font-size: 1rem; }
+
+    /* DASHBOARD / BARRA DE PROGRESSO */
+    .dashboard-container {
+      max-width: 1000px;
+      margin: 0 auto 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .dash-metrics {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 15px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    .metric-item h4 { margin: 0; font-size: 0.85rem; color: #7f8c8d; text-transform: uppercase; }
+    .metric-item p { margin: 5px 0 0 0; font-size: 1.4rem; font-weight: 700; color: #2c3e50; }
+    .metric-item.destaque p { color: #27ae60; }
+    
+    .progress-bar-bg {
+      background: #e9ecef;
+      height: 12px;
+      border-radius: 6px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      height: 100%;
+      width: 0%;
+      transition: width 0.8s ease-in-out;
+      border-radius: 6px;
+    }
+
+    /* BOTOES DE CATEGORIA (FILTROS) */
+    .filtros-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      max-width: 1000px;
+      margin: 0 auto 25px auto;
+    }
+    .btn-filtro {
+      background: white;
+      border: 1px solid #dcdde1;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #57606f;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-filtro:hover, .btn-filtro.ativo {
+      background: #27ae60;
+      color: white;
+      border-color: #27ae60;
+      box-shadow: 0 3px 8px rgba(39, 174, 96, 0.3);
+    }
 
     /* GRID DE PRESENTES RESPONSIVO */
     #lista-presentes {
@@ -93,7 +157,7 @@
     }
     .secao-mural h2 { text-align: center; color: #2c3e50; }
 
-    /* MODAL ESTILIZADO (POPUP) */
+    /* MODAL POPUP */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -163,9 +227,35 @@
     <p class="subtitulo">Escolha um presente especial para nos ajudar na nossa nova fase!</p>
   </header>
 
+  <!-- DASHBOARD DE PROGRESSO -->
+  <section class="dashboard-container">
+    <div class="dash-metrics">
+      <div class="metric-item">
+        <h4>Conquistados</h4>
+        <p id="dash-comprados">0 / 0</p>
+      </div>
+      <div class="metric-item destaque">
+        <h4>Total Garantido</h4>
+        <p id="dash-valor">R$ 0,00</p>
+      </div>
+      <div class="metric-item">
+        <h4>Progresso</h4>
+        <p id="dash-porcentagem">0%</p>
+      </div>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="dash-bar-fill"></div>
+    </div>
+  </section>
+
+  <!-- FILTROS DE CATEGORIA -->
+  <nav class="filtros-container" id="filtros-categoria">
+    <button class="btn-filtro ativo" onclick="filtrarCategoria('Todos', this)">✨ Todos</button>
+  </nav>
+
   <!-- LISTA DE PRESENTES -->
   <main id="lista-presentes">
-    <p style="text-align: center; grid-column: 1/-1;">Carregando presentes da planilha...</p>
+    <p style="text-align: center; grid-column: 1/-1;">Carregando enxoval...</p>
   </main>
 
   <hr style="margin: 50px 0; border: 0; border-top: 1px solid #e0e0e0;">
@@ -186,9 +276,6 @@
         <button class="btn-fechar" onclick="fecharModal()">&times;</button>
       </div>
       <form id="form-presentear" class="form-modal">
-        <input type="hidden" id="modal-id-presente">
-        <input type="hidden" id="modal-nome-presente">
-
         <label style="display:block; margin-bottom: 5px; font-size: 0.85rem; color: #555;">Seu nome:</label>
         <input type="text" id="modal-nome-convidado" placeholder="Ex: João e Maria" required>
 
@@ -201,45 +288,104 @@
   </div>
 
   <script>
+    let todosPresentes = [];
     let presenteSelecionado = {};
 
-    // 1. CARREGAR PRESENTES
+    // 1. CARREGAR PRESENTES E CALCULAR MÉTRICAS
     async function carregarPresentes() {
       try {
         const resposta = await fetch('/api/presentes');
-        const presentes = await resposta.json();
+        todosPresentes = await resposta.json();
 
-        const container = document.getElementById('lista-presentes');
-        container.innerHTML = ''; 
+        atualizarDashboard(todosPresentes);
+        gerarBotoesCategorias(todosPresentes);
+        renderizarPresentes(todosPresentes);
 
-        presentes.forEach(item => {
-          const card = document.createElement('div');
-          card.classList.add('card-presente');
-
-          const botaoHtml = item.comprado 
-            ? `<button class="btn-comprado" disabled>✅ Já Escolhido!</button>`
-            : `<button class="btn-presentear" onclick="abrirModal(${item.id}, '${item.nome.replace(/'/g, "\\'")}')">🎁 Presentear</button>`;
-
-          card.innerHTML = `
-            <img src="${item.imagem}" alt="${item.nome}" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80'">
-            <div class="card-corpo">
-              <h3>${item.nome}</h3>
-              <p>${item.descricao}</p>
-              <div>
-                <div class="preco">R$ ${item.preco.toFixed(2).replace('.',',')}</div>
-                ${botaoHtml}
-              </div>
-            </div>
-          `;
-
-          container.appendChild(card);
-        });
       } catch (erro) {
         console.error('Erro ao buscar presentes:', erro);
       }
     }
 
-    // 2. FUNÇÕES DO MODAL (POPUP)
+    // 2. ATUALIZA O DASHBOARD DE GASTOS E PROGRESSO
+    function atualizarDashboard(presentes) {
+      const totalItens = presentes.length;
+      const comprados = presentes.filter(item => item.comprado);
+      const totalComprados = comprados.length;
+      
+      const valorTotalGasto = comprados.reduce((acc, item) => acc + item.preco, 0);
+      const porcentagem = totalItens > 0 ? Math.round((totalComprados / totalItens) * 100) : 0;
+
+      document.getElementById('dash-comprados').innerText = `${totalComprados} / ${totalItens}`;
+      document.getElementById('dash-valor').innerText = `R$ ${valorTotalGasto.toFixed(2).replace('.', ',')}`;
+      document.getElementById('dash-porcentagem').innerText = `${porcentagem}%`;
+      document.getElementById('dash-bar-fill').style.width = `${porcentagem}%`;
+    }
+
+    // 3. GERAR BOTÕES DE FILTRO DINAMICAMENTE
+    function gerarBotoesCategorias(presentes) {
+      const categorias = ['Todos', ...new Set(presentes.map(p => p.categoria).filter(Boolean))];
+      const containerFiltros = document.getElementById('filtros-categoria');
+      
+      containerFiltros.innerHTML = '';
+
+      categorias.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.classList.add('btn-filtro');
+        if (cat === 'Todos') btn.classList.add('ativo');
+        btn.innerText = cat === 'Todos' ? '✨ Todos' : cat;
+        btn.onclick = () => filtrarCategoria(cat, btn);
+        containerFiltros.appendChild(btn);
+      });
+    }
+
+    // 4. FILTRAR POR CATEGORIA
+    function filtrarCategoria(categoria, botao) {
+      document.querySelectorAll('.btn-filtro').forEach(b => b.classList.remove('ativo'));
+      botao.classList.add('ativo');
+
+      if (categoria === 'Todos') {
+        renderizarPresentes(todosPresentes);
+      } else {
+        const filtrados = todosPresentes.filter(p => p.categoria === categoria);
+        renderizarPresentes(filtrados);
+      }
+    }
+
+    // 5. RENDERIZAR OS CARDS NA TELA
+    function renderizarPresentes(lista) {
+      const container = document.getElementById('lista-presentes');
+      container.innerHTML = '';
+
+      if (lista.length === 0) {
+        container.innerHTML = '<p style="text-align: center; grid-column: 1/-1;">Nenhum item nesta categoria.</p>';
+        return;
+      }
+
+      lista.forEach(item => {
+        const card = document.createElement('div');
+        card.classList.add('card-presente');
+
+        const botaoHtml = item.comprado 
+          ? `<button class="btn-comprado" disabled>✅ Já Escolhido!</button>`
+          : `<button class="btn-presentear" onclick="abrirModal(${item.id}, '${item.nome.replace(/'/g, "\\'")}')">🎁 Presentear</button>`;
+
+        card.innerHTML = `
+          <img src="${item.imagem}" alt="${item.nome}" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80'">
+          <div class="card-corpo">
+            <h3>${item.nome}</h3>
+            <p>${item.descricao}</p>
+            <div>
+              <div class="preco">R$ ${item.preco.toFixed(2).replace('.',',')}</div>
+              ${botaoHtml}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // 6. MODAL E RECADOS
     function abrirModal(id, nome) {
       presenteSelecionado = { id, nome };
       document.getElementById('modal-titulo').innerText = `Presentear: ${nome}`;
@@ -251,7 +397,6 @@
       document.getElementById('form-presentear').reset();
     }
 
-    // 3. ENVIAR FORMULÁRIO DO MODAL
     document.getElementById('form-presentear').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -281,7 +426,6 @@
       }
     });
 
-    // 4. CARREGAR RECADOS
     async function carregarRecados() {
       try {
         const resposta = await fetch('/api/recados');

@@ -354,7 +354,7 @@
       });
     }
 
-    // 4. RENDERIZAR OS CARDS NA TELA
+// 4. RENDERIZAR OS CARDS NA TELA (COM DISPONÍVEIS NO TOPO!)
     function renderizarPresentes(lista) {
       const container = document.getElementById('lista-presentes');
       container.innerHTML = '';
@@ -364,7 +364,10 @@
         return;
       }
 
-      lista.forEach(item => {
+      // Ordena: itens NÃO comprados (comprado: false) vêm PRIMEIRO (0), comprados vêm DEPOIS (1)
+      const listaOrdenada = [...lista].sort((a, b) => (a.comprado === b.comprado ? 0 : a.comprado ? 1 : -1));
+
+      listaOrdenada.forEach(item => {
         const card = document.createElement('div');
         card.classList.add('card-presente');
 

@@ -47,7 +47,7 @@ async function buscarPresentesDaPlanilha() {
       const marcaModelo = (colunas[2] || '').replace(/"/g, '').trim();
       
       // Converte preço
-      let precoTexto = (colunas[3] || '0').replace(/"/g, '').replace('R$', '').trim();
+      let precoTexto = (colunas[5] || '0').replace(/"/g, '').replace('R$', '').trim();
       precoTexto = precoTexto.replace('.', '').replace(',', '.');
       const preco = parseFloat(precoTexto) || 0;
 

@@ -64,6 +64,7 @@ async function buscarPresentesDaPlanilha() {
 
       return {
         id: index + 1,
+        categoria: categoria,
         nome: item,
         descricao: `${categoria} • ${marcaModelo}`,
         preco: preco,

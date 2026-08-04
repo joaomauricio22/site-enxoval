@@ -9,7 +9,7 @@ const PORTA = process.env.PORT || 3000;
 const URL_PLANILHA_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRWaRNMyg0a8t1NROyYxMPhbfQK-dTePXyhChQ4fdNBQOrqfDwQkBELXGu8ftRDAlNAwM9eNhIPl3MJ/pub?gid=1350173655&single=true&output=csv';
 
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 const CAMINHO_RECADOS = path.join(__dirname, 'recados.json');
 
@@ -83,7 +83,7 @@ async function buscarPresentesDaPlanilha() {
 // --- ROTAS ---
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Rota GET: Busca os presentes com as fotos da planilha online

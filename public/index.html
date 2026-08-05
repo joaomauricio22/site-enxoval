@@ -24,6 +24,19 @@
     <p>
       Agradecemos imensamente por fazer parte da nossa jornada e por nos ajudar a construir a nossa casa!
     </p>
+
+    <!-- CARROSSEL DE FOTOS -->
+    <div class="carrossel-container">
+      <div class="carrossel-slides">
+        <img src="images/foto1.jpeg" class="slide active" alt="Foto do Casal 1">
+        <img src="images/foto2.jpeg" class="slide" alt="Foto do Casal 2">
+        <img src="images/foto3.jpeg" class="slide" alt="Foto do Casal 3">
+      </div>
+
+      <!-- Botões de Navegação Manual -->
+      <button type="button" class="btn-carrossel prev" onclick="mudarSlide(-1)">❮</button>
+      <button type="button" class="btn-carrossel next" onclick="mudarSlide(1)">❯</button>
+    </div>
   </section>
   
   <!-- DASHBOARD DE PROGRESSO -->
@@ -280,6 +293,31 @@
       navigator.clipboard.writeText(campoPix.value);
       alert('Chave PIX copiada com sucesso! 📋✨');
     }
+
+    // --- LÓGICA DO CARROSSEL ---
+    const slides = document.querySelectorAll('.slide');
+    let slideIndex = 0;
+    
+    function mostrarSlide(index) {
+      if (slides.length === 0) return;
+
+      if (index >= slides.length) slideIndex = 0;
+      if (index < 0) slideIndex = slides.length - 1;
+
+      slides.forEach(slide => slide.classList.remove('active'));
+      slides[slideIndex].classList.add('active');
+    }
+
+    function mudarSlide(direcao) {
+      slideIndex += direcao;
+      mostrarSlide(slideIndex);
+    }
+
+    // Alterna foto a cada 4 segundos
+    setInterval(() => {
+      slideIndex++;
+      mostrarSlide(slideIndex);
+    }, 4000);
 
     carregarPresentes();
     carregarRecados();

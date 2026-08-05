@@ -13,6 +13,29 @@
     <h1>Nossa Lista de Enxoval 🏠✨</h1>
     <p class="subtitulo">Escolha um presente especial para nos ajudar na nossa nova fase!</p>
   </header>
+
+  <!-- CONTADOR REGRESSIVO -->
+  <div class="countdown-container">
+    <h3>Faltam poucos dias para o nosso grande dia! 💕</h3>
+    <div id="countdown" class="countdown-grid">
+      <div class="time-box">
+        <span id="dias">00</span>
+        <small>Dias</small>
+      </div>
+      <div class="time-box">
+        <span id="horas">00</span>
+        <small>Horas</small>
+      </div>
+      <div class="time-box">
+        <span id="minutos">00</span>
+        <small>Minutos</small>
+      </div>
+      <div class="time-box">
+        <span id="segundos">00</span>
+        <small>Segundos</small>
+      </div>
+    </div>
+  </div>
   
 <!-- SEÇÃO NOSSA HISTÓRIA -->
   <section class="historia-container">
@@ -319,6 +342,35 @@
       slideIndex++;
       mostrarSlide(slideIndex);
     }, 4000);
+
+    // --- LÓGICA DO CONTADOR REGRESSIVO ---
+    // Substitua a data abaixo pela data exata do casamento/evento (Ano, Mês - 1, Dia, Hora, Minuto)
+    // Nota: O mês no JS começa em 0 (Janeiro = 0, Abril = 3, Maio = 4, etc.)
+    const dataEvento = new Date(2027, 7, 18, 0, 0, 0).getTime(); // Exemplo: 01 de Abril de 2027
+
+    function atualizarCountdown() {
+      const agora = new Date().getTime();
+      const diferenca = dataEvento - agora;
+
+      if (diferenca < 0) {
+        document.getElementById('countdown').innerHTML = "<h4>O grande dia chegou! 🎉</h4>";
+        return;
+      }
+
+      const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+      const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+      const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+
+      document.getElementById('dias').innerText = dias < 10 ? '0' + dias : dias;
+      document.getElementById('horas').innerText = horas < 10 ? '0' + horas : horas;
+      document.getElementById('minutos').innerText = minutos < 10 ? '0' + minutos : minutos;
+      document.getElementById('segundos').innerText = segundos < 10 ? '0' + segundos : segundos;
+    }
+
+    // Atualiza a cada 1 segundo
+    setInterval(atualizarCountdown, 1000);
+    atualizarCountdown();
 
     carregarPresentes();
     carregarRecados();
